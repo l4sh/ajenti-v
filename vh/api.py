@@ -22,6 +22,10 @@ class Config (object):
         })
 
     def save(self):
+        # Get currently stored config to be compared on save
+        global vh_config
+        vh_config = json.load(open(VHManager.config_path))
+        
         return {
             'websites': [_.save() for _ in self.websites],
         }
@@ -55,7 +59,7 @@ class Website (object):
         })
 
     def save(self):
-        return {
+        website = {
             'name': self.name,
             'id': self.id,
             'owner': self.owner,
@@ -71,6 +75,24 @@ class Website (object):
             'ssl_cert_path': self.ssl_cert_path,
             'ssl_key_path': self.ssl_key_path,
         }
+
+        # check for duplicate domains before saving
+        ## get domain names used by other sites
+        used_domains = [site['domains'] for site in vh_config['websites']
+                       if site['id'] != self.id]
+        used_domains = [domains['domain'] for domains in reduce(lambda x,y:x+y,used_domains)]
+
+        ## get new domains
+        site_domains = [domain['domain'] for domain in website['domains']]
+        
+        ## get list of domains entered for the current site but already used
+        reserved = [domain for domain in site_domains if domain in used_domains]
+        if len(reserved) > 0:
+            print('ERROR: ' + ', '.join(reserved) + ' ALREADY USED, NOT SAVING')
+            [website['domains'].remove({'domain': domain})
+                for domain in reserved]
+          
+        return website
 
 
 class WebsiteDomain (object):
