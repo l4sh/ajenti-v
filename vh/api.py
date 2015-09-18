@@ -30,6 +30,7 @@ class Config (object):
 class Website (object):
     def __init__(self, j):
         self.name = j['name']
+        self.id = j['id']
         self.owner = j.get('owner', 'root')
         self.ssl_cert_path = j.get('ssl_cert_path', '')
         self.ssl_key_path = j.get('ssl_key_path', '')
@@ -48,6 +49,7 @@ class Website (object):
     def create(name):
         return Website({
             'name': name,
+            'id': str(uuid.uuid4())
             'domains': [],
             'ports': [WebsitePort.create(80).save()],
         })
@@ -55,6 +57,7 @@ class Website (object):
     def save(self):
         return {
             'name': self.name,
+            'id': self.id,
             'owner': self.owner,
             'domains': [_.save() for _ in self.domains],
             'ports': [_.save() for _ in self.ports],
